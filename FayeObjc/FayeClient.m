@@ -105,9 +105,7 @@
 #pragma mark -
 #pragma mark WebSocket Delegate
 
-#pragma mark -
-#pragma mark webSocket
--(void)webSocketDidClose:(ZTWebSocket *)webSocket {    
+-(void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean {
   self.webSocketConnected = NO;  
   fayeConnected = NO;  
   if(self.delegate != NULL && [self.delegate respondsToSelector:@selector(disconnectedFromServer)]) {
@@ -115,32 +113,17 @@
   }  
 }
 
--(void)webSocket:(ZTWebSocket *)webSocket didFailWithError:(NSError *)error {  
-  if (error.code == ZTWebSocketErrorConnectionFailed) {
-    NSLog(@"Connection failed %@", [error localizedDescription]);
-  } else if (error.code == ZTWebSocketErrorHandshakeFailed) {
-    NSLog(@"Handshake failed %@", [error localizedDescription]);
-  } else {
-    NSLog(@"Error %@", [error localizedDescription]);
-  }
+-(void)webSocket:(SRWebSocket *)webSocket didFailWithError:(NSError *)error {
+  NSLog(@"WebSocket error: %@", [error localizedDescription]);
 }
 
--(void)webSocket:(ZTWebSocket *)webSocket didReceiveMessage:(NSString*)message {
+-(void)webSocket:(SRWebSocket *)webSocket didReceiveMessage:(NSString*)message {
   [self parseFayeMessage:message];
 }
 
--(void)webSocketDidOpen:(ZTWebSocket *)aWebSocket { 
+-(void)webSocketDidOpen:(SRWebSocket *)aWebSocket {
   self.webSocketConnected = YES;  
   [self handshake];    
-}
-
--(void)webSocketDidSendMessage:(ZTWebSocket *)aWebSocket {
-#ifdef DEBUG
-  NSLog(@"WEBSOCKET DID SEND MESSAGE");
-#endif
-    if(self.delegate != NULL && [self.delegate respondsToSelector:@selector(socketDidSendMessage:)]) {
-        [self.delegate socketDidSendMessage:aWebSocket];
-    }
 }
 
 #pragma mark -
@@ -162,7 +145,9 @@
   // clean up any existing socket
   [webSocket setDelegate:nil];
   [webSocket close];
-  webSocket = [[ZTWebSocket alloc] initWithURLString:self.fayeURLString delegate:self];
+  NSURL *url = [NSURL URLWithString:self.fayeURLString];
+  webSocket = [[SRWebSocket alloc] initWithURLRequest:[NSURLRequest requestWithURL:url]];
+  webSocket.delegate = self;
   [webSocket open];	    
 }
 

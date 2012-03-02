@@ -31,7 +31,7 @@
 #endif
 
 #import "JSONKit.h"
-#import "ZTWebSocket.h"
+#import "SRWebSocket.h"
 enum _fayeStates {
   kWebSocketDisconnected,
   kWebSocketConnected,
@@ -52,21 +52,21 @@ enum _fayeStates {
 - (void)connectedToServer;
 - (void)disconnectedFromServer;
 @optional
-- (void)socketDidSendMessage:(ZTWebSocket *)aWebSocket;
+- (void)socketDidSendMessage:(id)aWebSocket;
 - (void)subscriptionFailedWithError:(NSString *)error;
 - (void)subscribedToChannel:(NSString *)channel;
 
 @end
 
 
-@interface FayeClient : NSObject <ZTWebSocketDelegate> {
+@interface FayeClient : NSObject <SRWebSocketDelegate> {
   @private
   BOOL fayeConnected;  
   NSDictionary *connectionExtension;
 }
 
 @property (strong) NSString *fayeURLString;
-@property (strong) ZTWebSocket* webSocket;
+@property (strong) SRWebSocket *webSocket;
 @property (strong) NSString *fayeClientId;
 @property (assign) BOOL webSocketConnected;
 @property (strong) NSString *activeSubChannel;

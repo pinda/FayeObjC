@@ -1,0 +1,3 @@
+[submodule "FayeObjc/SocketRocket"]
+	path = FayeObjc/SocketRocket
+	url = https://github.com/square/SocketRocket.git
