@@ -40,25 +40,31 @@
 		// Get the raw list of properties
 		unsigned int outCount;
 		objc_property_t *propList = class_copyPropertyList(currentClass, &outCount);
-		
+
+		// Get the list of exclusions.
+        NSArray *exclusions;
+        if([self respondsToSelector:@selector(excludedPropertyNames)]) {
+            exclusions = [self performSelector:@selector(excludedPropertyNames)];
+        } else {
+            exclusions = [NSArray array];
+        }
+
 		// Collect the property names
 		unsigned int i;
-		NSString *propName;
 		for (i = 0; i < outCount; i++)
 		{
 			objc_property_t * prop = propList + i;
 			NSString *type = [NSString stringWithCString:property_getAttributes(*prop) encoding:NSUTF8StringEncoding];
-			propName = [NSString stringWithCString:property_getName(*prop) encoding:NSUTF8StringEncoding];			
-      // check for exclusions
-      if([self respondsToSelector:@selector(excludedPropertyNames)] && [[self performSelector:@selector(excludedPropertyNames)] containsObject:propName])
-        continue; // skip this one 
+			NSString *propName = [NSString stringWithCString:property_getName(*prop) encoding:NSUTF8StringEncoding];
+
+            if([exclusions containsObject:propName])
+                continue; // skip this one
       
-      if([[propName substringToIndex:1] isEqualToString:@"_"]) {
-        NSLog(@"PRIVATE PROPERTY! %@", propName);
-        continue;
-      }
+            if([[propName substringToIndex:1] isEqualToString:@"_"]) {
+                continue;
+            }
       
-      [propertyNames setObject:[self getPropertyType:type] forKey:propName];
+            [propertyNames setObject:[self getPropertyType:type] forKey:propName];
 		}
 		
 		free(propList);
