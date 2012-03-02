@@ -148,12 +148,6 @@
 - (void) dealloc
 {
   self.delegate = nil;
-  [webSocket release];
-  [fayeURLString release];
-  [fayeClientId release];
-  [activeSubChannel release];  
-  [connectionExtension release];
-  [super dealloc];
 }
 
 @end
@@ -332,7 +326,6 @@
     } else {
       NSLog(@"NO MATCH FOR CHANNEL %@", fm.channel);      
     }
-    [fm release];
   }  
 }
 
