@@ -221,7 +221,7 @@
  {
  "channel": "/meta/subscribe",
  "clientId": "Un1q31d3nt1f13r",
- "subscription": "/foo/**"
+ "subscription": "/foo/..."
  }
  */
 - (void) subscribe {
@@ -240,7 +240,7 @@
  {
  "channel": "/meta/unsubscribe",
  "clientId": "Un1q31d3nt1f13r",
- "subscription": "/foo/**"
+ "subscription": "/foo/..."
  }
  */
 - (void) unsubscribe {

@@ -10,16 +10,25 @@
 #import "NSObject+PropertySupport.h"
 #import "NSString+InflectionSupport.h"
 
-@interface NSObject()
-
-+ (NSString *) getPropertyType:(NSString *)attributeString;
-
-@end
-
-
 @implementation NSObject (PropertySupport)
+
 + (NSArray *)propertyNames {
 	return [[self propertyNamesAndTypes] allKeys];
+}
+
++ (NSString *) getPropertyType:(NSString *)attributeString {
+	NSString *type = [NSString string];
+	NSScanner *typeScanner = [NSScanner scannerWithString:attributeString];
+	[typeScanner scanUpToCharactersFromSet:[NSCharacterSet characterSetWithCharactersInString:@"@"] intoString:NULL];
+	
+	// we are not dealing with an object
+	if([typeScanner isAtEnd]) {
+		return @"NULL";
+	}
+	[typeScanner scanCharactersFromSet:[NSCharacterSet characterSetWithCharactersInString:@"\"@"] intoString:NULL];
+	// this gets the actual object type
+	[typeScanner scanUpToCharactersFromSet:[NSCharacterSet characterSetWithCharactersInString:@"\""] intoString:&type];
+	return type;
 }
 
 + (NSDictionary *)propertyNamesAndTypes {
@@ -33,7 +42,7 @@
 		objc_property_t *propList = class_copyPropertyList(currentClass, &outCount);
 		
 		// Collect the property names
-		int i;
+		unsigned int i;
 		NSString *propName;
 		for (i = 0; i < outCount; i++)
 		{
@@ -66,21 +75,6 @@
 	for (NSString *property in [overrideProperties allKeys]) {
 		[self setValue:[overrideProperties objectForKey:property] forKey:property];
 	}
-}
-
-+ (NSString *) getPropertyType:(NSString *)attributeString {
-	NSString *type = [NSString string];
-	NSScanner *typeScanner = [NSScanner scannerWithString:attributeString];
-	[typeScanner scanUpToCharactersFromSet:[NSCharacterSet characterSetWithCharactersInString:@"@"] intoString:NULL];
-	
-	// we are not dealing with an object
-	if([typeScanner isAtEnd]) {
-		return @"NULL";
-	}
-	[typeScanner scanCharactersFromSet:[NSCharacterSet characterSetWithCharactersInString:@"\"@"] intoString:NULL];
-	// this gets the actual object type
-	[typeScanner scanUpToCharactersFromSet:[NSCharacterSet characterSetWithCharactersInString:@"\""] intoString:&type];
-	return type;
 }
 
 - (NSString *)className {
