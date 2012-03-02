@@ -168,8 +168,14 @@
 - (void) handshake {
   NSArray *connTypes = [NSArray arrayWithObjects:@"long-polling", @"callback-polling", @"iframe", @"websocket", nil];   
   NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:HANDSHAKE_CHANNEL, @"channel", @"1.0", @"version", @"1.0beta", @"minimumVersion", connTypes, @"supportedConnectionTypes", nil];
-  NSString *json = [dict JSONString];
-  [webSocket send:json];  
+  NSError *error = NULL;
+  NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
+  if (data) {
+    NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    [webSocket send:json];
+  } else {
+    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+  }
 }
 
 /*
@@ -180,8 +186,14 @@
  */
 - (void) connect {
   NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:CONNECT_CHANNEL, @"channel", self.fayeClientId, @"clientId", @"websocket", @"connectionType", nil];
-  NSString *json = [dict JSONString];  
-  [webSocket send:json];
+  NSError *error = NULL;
+  NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
+  if (data) {
+    NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    [webSocket send:json];
+  } else {
+    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+  }
 }
 
 /*
@@ -192,8 +204,14 @@
  */
 - (void) disconnect {
   NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:DISCONNECT_CHANNEL, @"channel", self.fayeClientId, @"clientId", nil];
-  NSString *json = [dict JSONString];  
-  [webSocket send:json];
+  NSError *error = NULL;
+  NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
+  if (data) {
+    NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    [webSocket send:json];
+  } else {
+    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+  }
 }
 
 /*
@@ -211,8 +229,14 @@
     dict = [NSDictionary dictionaryWithObjectsAndKeys:SUBSCRIBE_CHANNEL, @"channel", self.fayeClientId, @"clientId", self.activeSubChannel, @"subscription", self.connectionExtension, @"ext", nil];
   }
   
-  NSString *json = [dict JSONString];    
-  [webSocket send:json];
+  NSError *error = NULL;
+  NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
+  if (data) {
+    NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    [webSocket send:json];
+  } else {
+    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+  }
 }
 
 /*
@@ -224,8 +248,14 @@
  */
 - (void) unsubscribe {
   NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:UNSUBSCRIBE_CHANNEL, @"channel", self.fayeClientId, @"clientId", self.activeSubChannel, @"subscription", nil];
-  NSString *json = [dict JSONString];  
-  [webSocket send:json];
+  NSError *error = NULL;
+  NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
+  if (data) {
+    NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    [webSocket send:json];
+  } else {
+    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+  }
 }
 
 /*
@@ -247,15 +277,26 @@
     dict = [NSDictionary dictionaryWithObjectsAndKeys:channel, @"channel", self.fayeClientId, @"clientId", messageDict, @"data", messageId, @"id", extension, @"ext",nil];
   }
   
-  NSString *json = [dict JSONString];  
-  [webSocket send:json];
+  NSError *error = NULL;
+  NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
+  if (data) {
+    NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    [webSocket send:json];
+  } else {
+    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+  }
 }
 
 #pragma mark -
 #pragma mark Faye message handling
 - (void) parseFayeMessage:(NSString *)message {
-  // interpret the message(s) 
-  NSArray *messageArray = [message objectFromJSONString];    
+  // interpret the message(s)
+  NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
+  NSError *error = NULL;
+  NSArray *messageArray = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+  if (messageArray == nil) {
+    NSLog(@"Could not deserialize JSON (%@)", [error localizedDescription]);
+  }
   for(NSDictionary *messageDict in messageArray) {
     FayeMessage *fm = [[FayeMessage alloc] initWithDict:messageDict];    
     
