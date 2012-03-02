@@ -1,6 +1,6 @@
 = FayeObjC
 
-A simple Objective-C client library for the Faye publish-subscribe messaging server. FayeObjC is implementing on top of the zimt Objective-C web socket library and will work on both Mac and iPhone projects. JSON parsing is handled using the excellent JSONKit (https://github.com/johnezang/JSONKit) library which is included in the FayeObjC source folder.
+A simple Objective-C client library for the Faye publish-subscribe messaging server. FayeObjC was implemented on top of the zimt Objective-C web socket library and JSONKit. This fork replaces zimt with SocketRocket (https://github.com/square/SocketRocket) and NSJSONSerialization. Due to the latter, it will only work on iOS 5.0 and Mac OS X 10.7 or later. Additionally, this fork requires the use of ARC.
 
 = Mac Test Client
 
@@ -14,18 +14,9 @@ The Mac client is available in the Downloads section of the repo - click "Downlo
 
 = Building the library
 
-Using it in a Mac project:
+Using FayeObjC is as simple as adding the FayeObjC source folder to your Xcode project directory and then adding it to the project.  FayeObjC itself has no external dependencies, but SocketRocket does: libicucore.dylib, CFNetwork.framework, Security.framework and Foundation.framework.
 
-Using FayeObjC is as simple as adding the FayeObjC source folder to your Xcode project directory and then adding it to the project.  FayeObjc has only one dependency the CoreServices.framework on Mac OS X which is used by AsyncSocket (part of the zimt websocket library).  
-
-Add the CoreServices.framework to your project by right clicking on Linked Frameworks in the Project and selecting Add->Existing Frameworks...
-
-
-Using it in an iPhone project:
-
-Using FayeObjC is as simple as adding the FayeObjC source folder to your Xcode project directory and then adding it to the project.  FayeObjc has only one dependency the CFNetwork.framework on iOS which is used by AsyncSocket (part of the zimt websocket library).
-
-Add the CFNetwork.framework to your project by right clicking on Linked Frameworks in the Project and selecting Add->Existing Frameworks...
+Add these to your project by right clicking on Linked Frameworks in the Project and selecting Add->Existing Frameworks...
 
 == Working with the library
 
@@ -38,15 +29,15 @@ Initialize a Client:
   faye.delegate = self; // ensure that you implement the FayeClientDelegate functions
   // connect to the server
   [faye connectToServer];
-  
+
 Implement the FayeClientDelegate:
   - (void) messageReceived:(NSDictionary *)messageDict {
     DLog(@"message received");
-    // do something useful with the message dictionary    
+    // do something useful with the message dictionary
   }
 
   - (void)connectedToServer {
-    // Faye connection established    
+    // Faye connection established
   }
 
   - (void)disconnectedFromServer {
@@ -54,27 +45,27 @@ Implement the FayeClientDelegate:
   }
 
 Send a message to the Server:
-  // The message dictionary can be any dictionary structure that you want to send via the connected channel 
+  // The message dictionary can be any dictionary structure that you want to send via the connected channel
   NSDictionary *messageDict = [NSDictionary dictionaryWithObjectsAndKeys: @"Some message text", @"message", @"some meta information", @"meta", nil];
   [faye sendMessage:messageDict];
 
 
 Using Bayeux Extensions:
-  // Faye supports extensions to accomplish things like authentication  
+  // Faye supports extensions to accomplish things like authentication
   // import the client
   #import "FayeClient.h"
 
   // init the FayeClient with a server and channel to subscribe to
   FayeClient *faye = [[FayeClient alloc] initWithURLString:@"ws://localhost:8000/faye" channel:@"/chat"];
   faye.delegate = self; // ensure that you implement the FayeClientDelegate functions
-  
+
   // setup the extension and connect to the server
   NSDictionary *ext = [NSDictionary dictionaryWithObjectsAndKeys:@"testing", @"authToken", nil];
   [faye connectToServerWithExt:ext];
-        
+
   // sending an extension with a standard message
   NSDictionary *messageDict = [NSDictionary dictionaryWithObjectsAndKeys: @"Some message text", @"message", @"some meta information", @"meta", nil];
-  
+
   NSDictionary *ext = [NSDictionary dictionaryWithObjectsAndKeys:@"testing", @"authToken", nil];
   [faye sendMessage:messageDict withExt:ext];
 
@@ -93,13 +84,9 @@ Faye is a simple JSON based Pub-Sub server which has support for node.js and Rub
 Check out the Faye project here:
 * http://faye.jcoglan.com
 
-= ZTWebSocket
-ZTWebSocket is a websocket library built on top of AsyncSocket which provides an easy to use interface for working with websocket connections
-* https://github.com/esad/zimt
-
-= JSONKit
-JSONKit is an awesome JSON parser written in Objective-C which is both simple and extremely fast.
-* https://github.com/johnezang/JSONKit
+= SocketRocket
+SocketRocket is an RFC 6455 compliant WebSockets library built by Square.
+* https://github.com/square/SocketRocket
 
 
 == License
