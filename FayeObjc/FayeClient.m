@@ -130,6 +130,7 @@
 #pragma mark Deallocation
 - (void) dealloc
 {
+  webSocket.delegate = nil;
   self.delegate = nil;
 }
 
