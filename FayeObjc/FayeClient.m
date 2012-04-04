@@ -56,6 +56,7 @@
 @synthesize fayeClientId;
 @synthesize webSocketConnected;
 @synthesize activeSubChannel;
+@synthesize activeChannels;
 @synthesize delegate;
 @synthesize connectionExtension;
 
@@ -71,6 +72,21 @@
     self.webSocketConnected = NO;
     fayeConnected = NO;
     self.activeSubChannel = channel;  
+    
+    self.activeChannels = [NSMutableArray arrayWithObject:channel];
+  }
+  return self;
+}
+
+- (id) initWithURLString:(NSString *)aFayeURLString
+{
+  self = [super init];
+  if (self != nil) {
+    self.fayeURLString = aFayeURLString;
+    self.webSocketConnected = NO;
+    fayeConnected = NO;
+    
+    self.activeChannels = [NSMutableArray array];
   }
   return self;
 }
@@ -100,6 +116,61 @@
 
 - (void) sendMessage:(NSDictionary *)messageDict withExt:(NSDictionary *)extension {
   [self publish:messageDict withExt:extension];
+}
+
+#pragma mark -
+#pragma mark Public Bayeux procotol functions
+
+- (void) subscribeToChannel:(NSString *)channel {  
+  NSDictionary *dict = nil;
+  if(nil == self.connectionExtension) {
+    dict = [NSDictionary dictionaryWithObjectsAndKeys:SUBSCRIBE_CHANNEL, @"channel", self.fayeClientId, @"clientId", channel, @"subscription", nil];
+  } else {
+    dict = [NSDictionary dictionaryWithObjectsAndKeys:SUBSCRIBE_CHANNEL, @"channel", self.fayeClientId, @"clientId", channel, @"subscription", self.connectionExtension, @"ext", nil];
+  }
+  
+  NSError *error = NULL;
+  NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
+  if (data) {
+    NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    [webSocket send:json];
+    
+    [activeChannels addObject:channel];
+  } else {
+    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+  }
+}
+
+- (void) unsubscribeFromChannel:(NSString *)channel {
+  NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:UNSUBSCRIBE_CHANNEL, @"channel", self.fayeClientId, @"clientId", channel, @"subscription", nil];
+  
+  NSError *error = NULL;
+  NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
+  if (data) {
+    NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    [webSocket send:json];
+    
+    // Remove from active channels
+    [self.activeChannels removeObject:channel];
+  } else {
+    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+  }  
+}
+
+- (void) unsubscribeFromChannels {
+  for (NSString* channel in activeChannels) {
+    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:UNSUBSCRIBE_CHANNEL, @"channel", self.fayeClientId, @"clientId", channel, @"subscription", nil];
+    NSError *error = NULL;
+    NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
+    if (data) {
+      NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+      [webSocket send:json];
+      
+      self.activeChannels = [NSMutableArray array];
+    } else {
+      NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+    }
+  }  
 }
 
 #pragma mark -
@@ -309,7 +380,9 @@
         }
         [self connect];  
         // try to sub right after conn      
-        [self subscribe];
+        if ([self.activeSubChannel length] > 0) {
+          [self subscribe];
+        }
       } else {
         NSLog(@"ERROR WITH HANDSHAKE");
       }    
@@ -344,7 +417,7 @@
       }      
     } else if ([fm.channel isEqualToString:UNSUBSCRIBE_CHANNEL]) {
       NSLog(@"UNSUBSCRIBED FROM CHANNEL %@ ON FAYE", fm.subscription);
-    } else if ([fm.channel isEqualToString:self.activeSubChannel]) {            
+    } else if ([self.activeChannels containsObject:fm.channel]) {            
       if(fm.data) {        
         if(self.delegate != NULL && [self.delegate respondsToSelector:@selector(messageReceived:)]) {          
           [self.delegate messageReceived:fm.data];

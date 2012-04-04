@@ -59,6 +59,7 @@ enum _fayeStates {
 
 
 @interface FayeClient : NSObject <SRWebSocketDelegate> {
+  NSMutableArray *activeChannels;
   @private
   BOOL fayeConnected;  
   NSDictionary *connectionExtension;
@@ -69,12 +70,17 @@ enum _fayeStates {
 @property (strong) NSString *fayeClientId;
 @property (assign) BOOL webSocketConnected;
 @property (strong) NSString *activeSubChannel;
-@property (weak) id <FayeClientDelegate> delegate;
+@property (retain) NSMutableArray *activeChannels;
+@property (retain) id <FayeClientDelegate> delegate;
 
 - (id) initWithURLString:(NSString *)aFayeURLString channel:(NSString *)channel;
+- (id) initWithURLString:(NSString *)aFayeURLString;
 - (void) connectToServer;
 - (void) connectToServerWithExt:(NSDictionary *)extension;
 - (void) disconnectFromServer;
+- (void) subscribeToChannel:(NSString*)channel;
+- (void) unsubscribeFromChannel:(NSString*)channel;
+- (void) unsubscribeFromChannels;
 - (void) sendMessage:(NSDictionary *)messageDict;
 - (void) sendMessage:(NSDictionary *)messageDict withExt:(NSDictionary *)extension;
 
