@@ -27,6 +27,7 @@
 
 #import "FayeClient.h"
 #import "FayeMessage.h"
+#import "JSONKit.h"
 
 // allows definition of private property
 @interface FayeClient ()
@@ -72,7 +73,7 @@
     self.webSocketConnected = NO;
     fayeConnected = NO;
     self.activeSubChannel = channel;  
-    
+
     self.activeChannels = [NSMutableArray arrayWithObject:channel];
   }
   return self;
@@ -137,7 +138,10 @@
     
     [activeChannels addObject:channel];
   } else {
-    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+    NSString* json = [dict JSONString];
+    [webSocket send:json];
+    
+    [activeChannels addObject:channel];
   }
 }
 
@@ -153,7 +157,10 @@
     // Remove from active channels
     [self.activeChannels removeObject:channel];
   } else {
-    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+    NSString* json = [dict JSONString];
+    [webSocket send:json];
+    
+    [self.activeChannels removeObject:channel];
   }  
 }
 
@@ -168,7 +175,10 @@
       
       self.activeChannels = [NSMutableArray array];
     } else {
-      NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+      NSString* json = [dict JSONString];
+      [webSocket send:json];
+      
+      self.activeChannels = [NSMutableArray array];
     }
   }  
 }
@@ -246,7 +256,8 @@
     NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     [webSocket send:json];
   } else {
-    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+    NSString* json = [dict JSONString];
+    [webSocket send:json];
   }
 }
 
@@ -264,7 +275,8 @@
     NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     [webSocket send:json];
   } else {
-    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+    NSString* json = [dict JSONString];
+    [webSocket send:json];
   }
 }
 
@@ -282,7 +294,8 @@
     NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     [webSocket send:json];
   } else {
-    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+    NSString* json = [dict JSONString];
+    [webSocket send:json];
   }
 }
 
@@ -307,7 +320,8 @@
     NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     [webSocket send:json];
   } else {
-    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+    NSString* json = [dict JSONString];
+    [webSocket send:json];
   }
 }
 
@@ -326,7 +340,8 @@
     NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     [webSocket send:json];
   } else {
-    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+    NSString* json = [dict JSONString];
+    [webSocket send:json];
   }
 }
 
@@ -355,7 +370,8 @@
     NSString *json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     [webSocket send:json];
   } else {
-    NSLog(@"Could not serialize to JSON (%@)", [error localizedDescription]);
+    NSString* json = [dict JSONString];
+    [webSocket send:json];
   }
 }
 
@@ -366,9 +382,11 @@
   NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
   NSError *error = NULL;
   NSArray *messageArray = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+
   if (messageArray == nil) {
-    NSLog(@"Could not deserialize JSON (%@)", [error localizedDescription]);
+    messageArray = [message objectFromJSONString]; 
   }
+  
   for(NSDictionary *messageDict in messageArray) {
     FayeMessage *fm = [[FayeMessage alloc] initWithDict:messageDict];    
     
